@@ -191,7 +191,7 @@
       '<div class="qgrid mt16">' + X.soal.map((s, i) => '<button class="qn ' + (i === X.idx ? 'cur' : X.ragu.has(s.id) ? 'rg' : sudah(X.jaw[s.id]) ? 'ans' : '') + '" data-i="' + i + '" aria-label="Soal ' + (i + 1) + '">' + (i + 1) + '</button>').join('') + '</div>' +
       '<button class="btn btn-pu btn-lg btn-block mt20" onclick="EX.selesai()" ' + (finOk ? '' : 'disabled') + '>' + ic('checkCircle') + 'Kumpulkan Ujian</button>' +
       '<p class="xs muted tc mt8">' + (finOk ? 'Pastikan semua butir telah terjawab sebelum mengumpulkan.' : 'Tombol aktif ' + tol + ' menit sebelum waktu habis.') + '</p>' +
-      '<div class="card card-ps mt16" style="background:var(--muted-bg);box-shadow:none"><div class="flex jb ic small"><b>Integritas Peramban</b><span class="pill ' + (fsEl() ? 'pill-p' : 'pill-warn') + '">' + (fsEl() ? 'Layar penuh' : 'Tidak penuh') + '</span></div><div class="grid gc2 mt8 xs" style="gap:6px"><div class="muted">Perpindahan tab</div><div class="tr b6">' + X.tabCount + ' kali</div><div class="muted">Koneksi</div><div class="tr b6">' + (X.offline ? '<span class="ink-warn">Terputus</span>' : (X.lat || '-') + ' ms') + '</div></div></div>';
+      '<div class="card card-ps mt16" style="background:var(--muted-bg);box-shadow:none"><div class="flex jb ic small"><b>Integritas Peramban</b><span class="pill ' + (fsEl() ? 'pill-p' : 'pill-warn') + '">' + (fsEl() ? 'Layar penuh' : 'Tidak penuh') + '</span></div><div class="grid gc2 keep2 mt8 xs" style="gap:6px"><div class="muted">Perpindahan tab</div><div class="tr b6">' + X.tabCount + ' kali</div><div class="muted">Koneksi</div><div class="tr b6">' + (X.offline ? '<span class="ink-warn">Terputus</span>' : (X.lat || '-') + ' ms') + '</div></div></div>';
     el.querySelectorAll('.qn').forEach((q) => q.addEventListener('click', () => { EX.go(+q.dataset.i); document.body.classList.remove('qnav-open'); }));
   }
   function paintViol() {
@@ -231,7 +231,7 @@
     X.soal.forEach((s) => { if (X.ragu.has(s.id)) r++; if (sudah(X.jaw[s.id])) a++; });
     const k = X.soal.length - a;
     const m = NX.modal({ title: 'Selesaikan Ujian?', icon: 'checkCircle', iconCls: 'pu', size: 'narrow',
-      body: '<p class="tx2">Setelah dikumpulkan, jawaban tidak dapat diubah lagi.</p><div class="grid gc3 mt16" style="gap:10px">' + [['Dijawab', a, 'ok'], ['Ragu-ragu', r, 'acc'], ['Belum', k, 'err']].map((x) => '<div class="card card-ps tc"><div class="num b8" style="font-size:24px" class="ink-' + x[2] + '">' + x[1] + '</div><div class="xs muted">' + x[0] + '</div></div>').join('') + '</div>' + (k ? '<div class="banner warn mt16">' + ic('alert', 'sm') + '<div class="small">Masih ada <b>' + k + ' soal</b> yang belum dijawab.</div></div>' : ''),
+      body: '<p class="tx2">Setelah dikumpulkan, jawaban tidak dapat diubah lagi.</p><div class="grid gc3 keep3 mt16" style="gap:10px">' + [['Dijawab', a, 'ok'], ['Ragu-ragu', r, 'acc'], ['Belum', k, 'err']].map((x) => '<div class="card card-ps tc"><div class="num b8 ink-' + x[2] + '" style="font-size:24px">' + x[1] + '</div><div class="xs muted">' + x[0] + '</div></div>').join('') + '</div>' + (k ? '<div class="banner warn mt16">' + ic('alert', 'sm') + '<div class="small">Masih ada <b>' + k + ' soal</b> yang belum dijawab.</div></div>' : ''),
       foot: '<button class="btn btn-s" data-x>Periksa Lagi</button><button class="btn btn-p" id="okKumpul">' + ic('send', 'sm') + 'Ya, Kumpulkan</button>' });
     m.$('#okKumpul').onclick = () => { m.close(true); kumpul('MANUAL'); };
   };
@@ -447,29 +447,27 @@
     guard(true);
     const L = document.createElement('div');
     L.className = 'lock-screen';
-    L.innerHTML = '<div style="max-width:460px"><div class="lock-ic">' + ic('lock', 'xl') + '</div><h1 style="color:#fff;font-size:32px">Ujian Dikunci</h1><p class="mt12" style="color:#CBD5E1">Batas pelanggaran tercapai. Jawaban terakhir Anda sudah dikirim otomatis. Hubungi pengawas untuk membuka kunci.</p>' +
-      '<div class="flex jc g8 mt16"><span class="pill" style="background:rgba(255,255,255,.08);color:#E2E8F0"><span class="spin" style="width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span>Memeriksa status otomatis setiap 15 detik</span></div>' +
-      '<div class="card card-p mt24" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);box-shadow:none"><div class="small" style="color:#E2E8F0">Pengawas dapat membuka kunci langsung di perangkat ini:</div><div class="flex g8 mt12"><input class="input tc num b7" id="pinIn" inputmode="numeric" maxlength="6" placeholder="PIN Pengawas" style="background:rgba(255,255,255,.95);letter-spacing:.3em;font-size:18px"><button class="btn btn-p" id="pinBtn">' + ic('unlock', 'sm') + 'Buka</button></div><div class="xs mt8" id="pinMsg" style="color:#FCA5A5"></div></div>' +
-      '<p class="xs mt16 flex jc ic g6" style="color:#86EFAC">' + ic('cloudCheck', 'sm') + 'Jawaban Anda sudah tersimpan</p></div>';
+    L.innerHTML = '<div class="lock-box"><div class="lock-ic">' + ic('lock', 'xl') + '</div><h1>Ujian Dikunci</h1><p class="lock-sub">Batas pelanggaran tercapai. Jawaban terakhir Anda sudah dikirim otomatis.</p>' +
+      '<div class="lock-card"><div class="flex ic g12"><span class="tile sm" style="background:rgba(255,255,255,.1);color:#fff">' + ic('shield', 'sm') + '</span><div class="f1 tl"><b>Hubungi pengawas ruang</b><div class="xs" style="color:#CBD5E1">Pengawas/admin membuka kunci dari menu <b>Monitoring Langsung</b>. Halaman ini akan terbuka sendiri — tidak perlu memuat ulang.</div></div></div>' +
+      '<div class="lock-wait mt16"><span class="lock-spin"></span><span id="lockMsg">Menunggu dibuka pengawas…</span></div></div>' +
+      '<div class="lock-meta"><span>' + esc(S.me.nama) + '</span><span>·</span><span>NIS ' + esc(S.me.nis || S.me.nisn || '') + '</span></div>' +
+      '<p class="xs mt12 flex jc ic g6" style="color:#86EFAC">' + ic('cloudCheck', 'sm') + 'Jawaban Anda sudah tersimpan</p></div>';
     document.body.appendChild(L);
-    const inp = L.querySelector('#pinIn'), btn = L.querySelector('#pinBtn');
-    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') btn.click(); });
-    btn.onclick = async () => {
-      const pin = inp.value.trim(); if (pin.length < 4) return;
-      NX.btnBusy(btn, true);
-      try { const r = await NX.api('exam.bukaPin', { id_sesi: X.sesi.id_sesi, pin }, { retry: 1 }); unlocked(r); }
-      catch (e) { L.querySelector('#pinMsg').textContent = e.message; NX.btnBusy(btn, false); inp.value = ''; }
-    };
     clearInterval(X.lockPoll);
     X.lockPoll = setInterval(async () => {
       if (!X || X.status !== 'TERKUNCI') { clearInterval(X && X.lockPoll); return; }
+      const msg = document.getElementById('lockMsg');
       try {
         if (X.pending.length) await syncNow();
         const r = await NX.api('exam.status', { id_sesi: X.sesi.id_sesi }, { retry: 0 });
         if (r.status === 'MENGERJAKAN') unlocked(r);
         else if (r.status === 'SELESAI') selesaiDariServer();
-      } catch (e) { if (e.kode === 'SESI' || e.kode === 'LOGIN_GANDA') berhenti(e.message); }
-    }, 15000);
+        else if (msg) msg.textContent = 'Menunggu dibuka pengawas… (diperiksa ' + F.jam(NX.now()) + ')';
+      } catch (e) {
+        if (e.kode === 'SESI' || e.kode === 'LOGIN_GANDA') berhenti(e.message);
+        else if (msg) msg.textContent = 'Koneksi terputus — mencoba lagi…';
+      }
+    }, 10000);
     X.timers.push(X.lockPoll);
   }
   function unlocked(r) {
@@ -477,7 +475,7 @@
     X.status = 'MENGERJAKAN'; X.pel = r.pelanggaran || 0; if (r.batas) X.batas = r.batas;
     const L = document.querySelector('.lock-screen'); if (L) L.remove();
     guard(false); paintViol(); paintNav();
-    NX.toast('Kunci dibuka pengawas. Silakan lanjutkan ujian.', 'ok');
+    NX.toast('Kunci dibuka pengawas. Silakan lanjutkan ujian.' + (r.extra ? '' : ''), 'ok');
     if (!fsEl()) fsGate(false);
   }
 
@@ -543,12 +541,13 @@
       '<div class="card" style="max-width:1000px;margin:24px auto 0;overflow:hidden;animation:slideUp .5s var(--ease)"><div style="height:6px;background:linear-gradient(90deg,var(--p),var(--pu))"></div><div class="card-p tc">' +
         '<span class="pill pill-p">' + ic('checkCircle', 'sm') + ' Ujian Selesai Dikumpulkan</span><h1 class="mt12" style="font-size:30px">' + esc(u.judul) + '</h1>' +
         '<div class="small muted mt8 flex jc g16 wrap"><span class="flex ic g4">' + ic('hash', 'sm') + esc(id) + '</span><span class="flex ic g4">' + ic('calendar', 'sm') + F.tgl(NX.now()) + '</span><span class="flex ic g4">' + ic('clock', 'sm') + F.jam(sesi.mulai) + ' – ' + F.jam(r.selesai || NX.now()) + ' WIB</span></div>' +
+        (r.alasan === 'PAKSA' ? '<div class="banner neu mt16" style="text-align:left">' + ic('info', 'sm') + '<div class="small">Ujian Anda <b>diselesaikan oleh pengawas</b>. Semua jawaban yang sudah Anda isi tetap tersimpan dan dinilai.</div></div>' : r.alasan === 'PELANGGARAN' ? '<div class="banner err mt16" style="text-align:left">' + ic('shieldAlert', 'sm') + '<div class="small">Jawaban dikumpulkan otomatis karena <b>batas pelanggaran</b> tercapai.</div></div>' : '') +
         (show ? '<div class="flex jc mt24">' + NX.chart.ring(r.nilai, 100, 180, tun ? 'var(--p)' : 'var(--warn)', '/ 100') + '</div><div class="mt16">' + (r.status_nilai === 'MENUNGGU_KOREKSI' ? NX.pill('Nilai sementara · esai menunggu koreksi guru', 'pu', 'pill-lg') : NX.pill((tun ? 'TUNTAS' : 'BELUM TUNTAS') + ' · KKM ' + kkm, tun ? 'p' : 'warn', 'pill-lg')) + '</div><p class="mt12 tx2">' + (r.status_nilai === 'MENUNGGU_KOREKSI' ? 'Nilai akhir menyusul setelah jawaban esai dikoreksi guru.' : tun ? 'Selamat! Nilai Anda melampaui kriteria ketuntasan minimal.' : 'Tetap semangat — pelajari kembali materi yang belum dikuasai.') + '</p>' +
-          '<div class="grid gc3 mt24" style="text-align:left">' + [['Jawaban benar', r.benar, 'check', 'ink-p', 'p'], ['Jawaban salah', r.salah, 'x', 'ink-err', 'err'], ['Tidak dijawab', r.kosong, 'minus', '', 'neu']].map((x) => '<div class="card card-ps" style="background:var(--muted-bg);box-shadow:none"><div class="flex jb ic"><span class="small tx2">' + x[0] + '</span><span class="tile sm ' + x[4] + '" style="border-radius:50%">' + ic(x[2], 'sm') + '</span></div><div class="num b8 mt8 ' + x[3] + '" style="font-size:30px">' + (x[1] || 0) + ' <small class="small muted b6">butir</small></div></div>').join('') + '</div>'
+          '<div class="grid gc3 keep3 res-stat mt24" style="text-align:left">' + [['Jawaban benar', r.benar, 'check', 'ink-p', 'p'], ['Jawaban salah', r.salah, 'x', 'ink-err', 'err'], ['Tidak dijawab', r.kosong, 'minus', '', 'neu']].map((x) => '<div class="card card-ps" style="background:var(--muted-bg);box-shadow:none"><div class="flex jb ic"><span class="small tx2">' + x[0] + '</span><span class="tile sm ' + x[4] + '" style="border-radius:50%">' + ic(x[2], 'sm') + '</span></div><div class="num b8 mt8 ' + x[3] + '" style="font-size:30px">' + (x[1] || 0) + ' <small class="small muted b6">butir</small></div></div>').join('') + '</div>'
           : '<div class="tile lg pu" style="margin:28px auto 0;border-radius:50%;width:84px;height:84px">' + ic('hourglass', 'xl') + '</div><h3 class="mt16">Jawaban berhasil dikumpulkan</h3><p class="tx2 mt8">Hasil dan nilai akan diumumkan oleh guru setelah sesi evaluasi berakhir.</p>') +
         '<div class="card card-ps mt24" style="background:var(--p-50);border-color:var(--p-100);box-shadow:none;text-align:left"><div class="flex jb ic"><b>Log & Integritas Pelaksanaan</b><span class="xs ink-p b6 flex ic g4">' + ic('shieldCheck', 'sm') + 'Terautentikasi</span></div><div class="grid gc3 mt12" style="gap:12px">' +
           [['timer', 'Waktu pengerjaan', F.dur(r.durasi || ((r.selesai || NX.now()) - sesi.mulai) / 1000), 'Dari alokasi ' + u.durasi + ' menit'], ['shield', 'Status integritas', r.pelanggaran ? r.pelanggaran + ' pelanggaran' : '100% bersih', (r.pelanggaran || 0) + ' dari ' + X.limit + ' toleransi'], ['cloudCheck', 'Sinkronisasi server', 'Tersimpan aman', 'Server sekolah']].map((x) => '<div class="card card-ps flex g12" style="box-shadow:none"><span class="tile sm">' + ic(x[0], 'sm') + '</span><div><div class="xs muted">' + x[1] + '</div><div class="b7">' + esc(x[2]) + '</div><div class="xs muted">' + esc(x[3]) + '</div></div></div>').join('') + '</div></div>' +
-        '<div class="flex g12 mt24 wrap jc"><button class="btn btn-p btn-lg" onclick="NX.go(\'s/home\')">Kembali ke Dashboard ' + ic('arrowR', 'sm') + '</button><button class="btn btn-s btn-lg" onclick="NX.go(\'s/hasil\')">' + ic('chart', 'sm') + 'Lihat Rekap di Hasil Saya</button></div>' +
+        '<div class="res-act mt24"><button class="btn btn-p btn-lg" onclick="NX.go(\'s/home\')">Kembali ke Dashboard ' + ic('arrowR', 'sm') + '</button><button class="btn btn-s btn-lg" onclick="NX.go(\'s/hasil\')">' + ic('chart', 'sm') + 'Lihat Rekap di Hasil Saya</button></div>' +
       '</div></div></div>';
     NX.afterRender(page);
     if (tun) confetti();

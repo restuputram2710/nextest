@@ -3,7 +3,7 @@
 (function () {
   const NX = window.NX, esc = NX.esc, ic = NX.ic, S = NX.S, F = NX.fmt, AD = window.AD;
   const BINS = ['0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90-100'];
-  const ALASAN = { MANUAL: 'Dikumpulkan', WAKTU: 'Waktu habis', PAKSA: 'Paksa kumpul', PELANGGARAN: 'Batas pelanggaran' };
+  const ALASAN = { MANUAL: 'Dikumpulkan', WAKTU: 'Waktu habis', PAKSA: 'Diselesaikan admin', PELANGGARAN: 'Batas pelanggaran' };
   const pilihUjian = (judul, sub, go, filter) => async function () {
     const list = (await NX.load('a_ujian', 'ujian.list', {}, 20000, true)).filter((u) => u.status !== 'DRAF' && u.buka <= NX.now() && (!filter || filter(u)));
     return '<div class="page-hd"><div><h1>' + judul + '</h1><p>' + sub + '</p></div></div><section class="card"><div id="puTbl"></div></section>';
@@ -56,8 +56,8 @@
         rowClass: (r) => (r.status === 'SELESAI' && r.nilai !== null && r.nilai < r.kkm ? 'row-err' : ''),
         onRow: (r) => r.status !== 'BELUM' && detailSesi(r, u),
         columns: [
-          { k: 'peringkat', label: '#', cls: 'n', w: '50px', render: (r) => r.peringkat ? '<b class="num ' + (r.peringkat <= 3 ? 'ink-acc' : '') + '">' + r.peringkat + '</b>' : '<span class="muted">—</span>' },
-          { k: 'nama', label: 'Nama', render: (r) => '<div class="b6">' + esc(r.nama) + '</div><div class="xs muted mono">' + esc(r.nis || r.nisn) + '</div>' },
+          { k: 'peringkat', label: '#', cls: 'n', m: 'hide', w: '50px', render: (r) => r.peringkat ? '<b class="num ' + (r.peringkat <= 3 ? 'ink-acc' : '') + '">' + r.peringkat + '</b>' : '<span class="muted">—</span>' },
+          { k: 'nama', label: 'Nama', m: 'title', render: (r) => '<div class="b6">' + (r.peringkat ? '<span class="m-only num ink-p">#' + r.peringkat + ' </span>' : '') + esc(r.nama) + '</div><div class="xs muted mono">' + esc(r.nis || r.nisn) + '</div>' },
           { k: 'kelas', label: 'Kelas' },
           { label: 'B / S / K', sort: false, render: (r) => r.status === 'SELESAI' ? '<span class="num small"><span class="ink-ok b7">' + r.benar + '</span> / <span class="ink-err b7">' + r.salah + '</span> / ' + r.kosong + (r.menunggu ? ' <span class="ink-pu xs">+' + r.menunggu + ' esai</span>' : '') + '</span>' : '<span class="muted">—</span>' },
           { k: 'nilai', label: 'Nilai', cls: 'n', desc: true, render: (r) => r.status === 'SELESAI' && r.nilai !== null ? '<b class="num" style="font-size:16px;color:' + (r.nilai >= r.kkm ? 'var(--p-d)' : 'var(--err-s)') + '">' + F.num(r.nilai) + '</b>' : '<span class="muted">—</span>' },
@@ -83,13 +83,14 @@
     const m = NX.drawer({ title: r.nama, icon: 'fileText', size: 'wide', body: NX.skel(320) });
     try {
       const d = await NX.api('hasil.detail', { id_sesi: r.id_sesi });
-      const lbl = Object.assign({}, EX.VLABEL, { KUMPUL_OTOMATIS: 'Dikumpulkan otomatis (batas pelanggaran)', TERKUNCI: 'Ujian terkunci', DIBUKA: 'Kunci dibuka', RESET_LOGIN: 'Reset login', TAMBAH_WAKTU: 'Tambah waktu', PAKSA_KUMPUL: 'Paksa kumpul', RESET: 'Direset' });
+      const lbl = Object.assign({}, EX.VLABEL, { KUMPUL_OTOMATIS: 'Dikumpulkan otomatis (batas pelanggaran)', TERKUNCI: 'Ujian terkunci', DIBUKA: 'Kunci dibuka', RESET_LOGIN: 'Reset login', TAMBAH_WAKTU: 'Tambah waktu', PAKSA_KUMPUL: 'Diselesaikan admin', RESET: 'Direset' });
       const fmtJ = (it, v) => { if (v === null || v === undefined || v === '' || (Array.isArray(v) && !v.some(Boolean))) return '<span class="muted">(kosong)</span>'; if (it.tipe === 'KATEGORI') return (it.pernyataan || []).map((pp, i) => '<div class="xs">' + (i + 1) + '. ' + esc(NX.plain(pp).slice(0, 60)) + ' → <b>' + esc(v[i] || '-') + '</b></div>').join(''); if (it.tipe === 'ESAI') return '<div class="small" style="white-space:pre-wrap">' + esc(v) + '</div>'; return '<b>' + esc([].concat(v).join(', ')) + '</b>'; };
       m.$('.modal-bd').innerHTML = '<div class="grid gc4 keep2" style="gap:10px">' + [['Nilai', d.nilai === null ? '-' : F.num(d.nilai)], ['Benar', (d.info.b || 0)], ['Salah', (d.info.s || 0)], ['Pelanggaran', d.pelanggaran]].map((k) => '<div class="card card-ps tc"><div class="num b8" style="font-size:22px">' + esc(k[1]) + '</div><div class="xs muted">' + k[0] + '</div></div>').join('') + '</div>' +
         '<p class="xs muted mt12">' + esc(d.siswa.kelas) + ' · NIS ' + esc(d.siswa.nis) + ' · mulai ' + F.tglJam(d.mulai) + (d.selesai ? ' · selesai ' + F.jam(d.selesai) : '') + '</p>' +
-        '<h4 class="mt20">Jawaban per butir</h4><div class="tbl-wrap mt8"><table class="tbl compact"><thead><tr><th>No</th><th>Soal</th><th>Jawaban</th><th>Kunci</th><th class="n">Skor</th></tr></thead><tbody>' +
-        d.items.map((it) => '<tr class="' + (it.kosong ? '' : it.benar ? '' : 'row-err') + '"><td class="num b7">' + it.no + '</td><td><div class="xs muted">' + esc(BK.TL[it.tipe] || it.tipe) + '</div><div class="small clamp2" style="max-width:260px">' + esc(it.teks) + '</div></td><td>' + fmtJ(it, it.jawaban) + '</td><td class="small">' + (it.tipe === 'ESAI' ? '<span class="muted">rubrik</span>' : esc([].concat(it.kunci || []).join(it.tipe === 'KATEGORI' ? ' | ' : ', '))) + '</td><td class="n num">' + (it.skor === null || it.skor === undefined ? '<span class="ink-pu xs">koreksi</span>' : F.num(it.skor)) + '<span class="xs muted">/' + F.num(it.bobot) + '</span></td></tr>').join('') + '</tbody></table></div>' +
+        '<h4 class="mt20">Jawaban per butir</h4><div class="tbl-wrap mt8"><table class="tbl compact auto-stack"><thead><tr><th class="m-hide">No</th><th class="m-title">Soal</th><th>Jawaban</th><th>Kunci</th><th class="n">Skor</th></tr></thead><tbody>' +
+        d.items.map((it) => '<tr class="' + (it.kosong ? '' : it.benar ? '' : 'row-err') + '"><td class="num b7">' + it.no + '</td><td><div class="xs muted"><span class="m-only b7 tx">No. ' + it.no + ' · </span>' + esc(BK.TL[it.tipe] || it.tipe) + '</div><div class="small clamp2" style="max-width:260px">' + esc(it.teks) + '</div></td><td>' + fmtJ(it, it.jawaban) + '</td><td class="small">' + (it.tipe === 'ESAI' ? '<span class="muted">rubrik</span>' : esc([].concat(it.kunci || []).join(it.tipe === 'KATEGORI' ? ' | ' : ', '))) + '</td><td class="n num">' + (it.skor === null || it.skor === undefined ? '<span class="ink-pu xs">koreksi</span>' : F.num(it.skor)) + '<span class="xs muted">/' + F.num(it.bobot) + '</span></td></tr>').join('') + '</tbody></table></div>' +
         '<h4 class="mt20">Log integritas</h4><div class="mt8">' + (d.log.length ? d.log.map((e) => '<div class="row-item"><span class="tile sm ' + (e.h ? 'err' : 'neu') + '">' + ic(e.h ? 'alert' : 'info', 'sm') + '</span><div class="f1"><div class="small b6">' + esc(lbl[e.j] || e.j) + '</div><div class="xs muted">' + F.tglJam(e.t) + ' · ' + esc(e.k || '') + '</div></div></div>').join('') : '<p class="small muted">Tidak ada kejadian tercatat.</p>') + '</div>';
+      NX.stackify(m.el);
     } catch (e) { m.$('.modal-bd').innerHTML = NX.errorBox(e); }
   }
 
@@ -201,8 +202,8 @@
         filters: [{ k: 'keputusan', label: 'Semua keputusan', options: [['Diterima', 'Diterima'], ['Direvisi', 'Direvisi'], ['Dibuang', 'Dibuang']] }, { k: 'tipe', label: 'Semua tipe', options: [['PG', 'PG'], ['MCMA', 'PG Kompleks'], ['KATEGORI', 'Kategori'], ['ESAI', 'Esai']] }],
         onRow: (b) => detailButir(b),
         columns: [
-          { k: 'nomor', label: 'No', cls: 'n', w: '50px', render: (b) => '<b class="num">' + b.nomor + '</b>' },
-          { k: 'cuplikan', label: 'Soal', render: (b) => '<div class="xs muted">' + esc(BK.TL[b.tipe]) + ' · n=' + b.n + '</div><div class="small clamp2" style="max-width:320px">' + esc(b.cuplikan) + '</div>' },
+          { k: 'nomor', label: 'No', cls: 'n', m: 'hide', w: '50px', render: (b) => '<b class="num">' + b.nomor + '</b>' },
+          { k: 'cuplikan', label: 'Soal', m: 'title', render: (b) => '<div class="xs muted"><span class="m-only b7 tx">No. ' + b.nomor + ' · </span>' + esc(BK.TL[b.tipe]) + ' · n=' + b.n + '</div><div class="small clamp2" style="max-width:320px">' + esc(b.cuplikan) + '</div>' },
           { k: 'p', label: 'Kesukaran (p)', cls: 'n', render: (b) => b.p === null ? '<span class="muted">—</span>' : '<b class="num">' + b.p.toFixed(2) + '</b><div class="xs muted">' + esc(b.kategori_p) + '</div>' },
           { k: 'd', label: 'Daya beda (D)', cls: 'n', desc: true, render: (b) => b.d === null ? '<span class="muted">—</span>' : '<b class="num ' + (b.d >= 0.3 ? 'ink-ok' : b.d >= 0.2 ? 'ink-warn' : 'ink-err') + '">' + b.d.toFixed(2) + '</b><div class="xs muted">' + esc(b.kategori_d) + '</div>' },
           { label: 'Sebaran jawaban', sort: false, render: mini },
@@ -259,7 +260,7 @@
         filters: [{ k: 'jenis', label: 'Semua jenis', options: Object.keys(EX.VLABEL).map((k) => [k, EX.VLABEL[k]]) }, { label: 'Semua', options: [['1', 'Dihitung saja'], ['0', 'Tercatat saja']], fn: (r, v) => (v === '1' ? r.dihitung : !r.dihitung) }],
         columns: [
           { k: 't', label: 'Waktu', desc: true, render: (r) => '<span class="xs nowrap">' + F.tglJam(r.t) + '</span>' },
-          { k: 'nama', label: 'Siswa', render: (r) => '<div class="b6">' + esc(r.nama) + '</div><div class="xs muted">' + esc(r.kelas) + ' · ' + esc(r.nis) + '</div>' },
+          { k: 'nama', label: 'Siswa', m: 'title', render: (r) => '<div class="b6">' + esc(r.nama) + '</div><div class="xs muted">' + esc(r.kelas) + ' · ' + esc(r.nis) + '</div>' },
           { k: 'ujian', label: 'Ujian', render: (r) => '<span class="small clamp1" style="max-width:220px;display:block">' + esc(r.ujian) + '</span>' },
           { k: 'jenis', label: 'Jenis', render: (r) => NX.pill(EX.VLABEL[r.jenis] || r.jenis, r.dihitung ? 'err' : '', 'nodot') },
           { k: 'keterangan', label: 'Keterangan', render: (r) => '<span class="xs tx2">' + esc(r.keterangan) + '</span>' },

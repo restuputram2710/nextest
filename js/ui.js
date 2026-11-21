@@ -176,8 +176,30 @@
   };
 
   // ------------------------------------------------------------ sesudah render: angka berjalan, donat, tooltip
+  // Tabel HTML biasa bertanda .auto-stack → kartu bertumpuk di HP (label dari <th>)
+  NX.stackify = function (root) {
+    (root || document).querySelectorAll('table.tbl.auto-stack:not(.stack)').forEach((t) => {
+      const ths = Array.from(t.querySelectorAll('thead th'));
+      t.classList.add('stack');
+      t.querySelectorAll('tbody tr').forEach((tr) => Array.from(tr.children).forEach((td, i) => {
+        if (td.hasAttribute('colspan')) return;
+        const th = ths[i];
+        td.setAttribute('data-l', th ? th.textContent.trim() : '');
+        if (th) ['m-hide', 'm-title', 'm-full', 'act'].forEach((c) => { if (th.classList.contains(c)) td.classList.add(c); });
+        if (!td.querySelector(':scope > .tdv')) { const d = document.createElement('div'); d.className = 'tdv'; while (td.firstChild) d.appendChild(td.firstChild); td.appendChild(d); }
+      }));
+    });
+  };
+  NX.tabsFade = function (root) {
+    (root || document).querySelectorAll('.tabs').forEach((t) => {
+      const upd = () => { t.classList.toggle('ovf', t.scrollWidth > t.clientWidth + 2); t.classList.toggle('end', t.scrollLeft + t.clientWidth >= t.scrollWidth - 4); };
+      upd(); if (!t._fade) { t._fade = 1; t.addEventListener('scroll', upd, { passive: true }); }
+    });
+  };
+  window.addEventListener('resize', NX.debounce(() => NX.tabsFade(), 200));
   NX.afterRender = function (root) {
     root = root || document;
+    NX.stackify(root); NX.tabsFade(root);
     root.querySelectorAll('[data-count]').forEach((el) => {
       const v = parseFloat(el.dataset.count); if (isNaN(v)) return;
       const dec = +el.dataset.dec || 0, t0 = performance.now(), dur = 1100;
@@ -267,7 +289,7 @@
     let rows = o.rows || [];
     el.innerHTML = '<div class="tbar">' + (o.search ? '<div class="input-ic">' + ic('search') + '<input class="input input-sm" data-q placeholder="' + esc(o.searchPh || 'Cari…') + '"></div>' : '') +
       (o.filters || []).map((f, i) => '<select class="select input-sm" data-f="' + i + '" style="width:auto;min-width:150px"><option value="">' + esc(f.label) + '</option>' + f.options.map((op) => '<option value="' + esc(op[0]) + '">' + esc(op[1]) + '</option>').join('') + '</select>').join('') +
-      '<span class="small muted" data-count></span><div class="ml-a flex g8 wrap">' + (o.tools || '') + '</div></div><div class="tbl-wrap"><table class="tbl ' + (o.compact ? 'compact' : '') + '"><thead><tr>' +
+      '<span class="small muted" data-count></span><div class="ml-a flex g8 wrap">' + (o.tools || '') + '</div></div><div class="tbl-wrap"><table class="tbl ' + (o.compact ? 'compact ' : '') + (o.stack === false ? '' : 'stack') + '"><thead><tr>' +
       o.columns.map((c, i) => '<th class="' + (c.sort !== false && c.k ? 'sort ' : '') + (c.cls || '') + '" data-c="' + i + '" style="' + (c.w ? 'width:' + c.w : '') + '">' + esc(c.label) + (c.sort !== false && c.k ? '<span class="arr"></span>' : '') + '</th>').join('') + '</tr></thead><tbody></tbody></table></div><div class="pager"></div>';
     const tb = el.querySelector('tbody'), pg = el.querySelector('.pager'), cnt = el.querySelector('[data-count]');
     function filtered() {
@@ -286,7 +308,7 @@
       const r = filtered(), n = r.length, pages = Math.max(1, Math.ceil(n / st.size));
       st.page = Math.min(st.page, pages);
       const slice = r.slice((st.page - 1) * st.size, st.page * st.size);
-      tb.innerHTML = slice.length ? slice.map((x, i) => '<tr class="' + (o.onRow ? 'click ' : '') + (o.rowClass ? o.rowClass(x) : '') + '" data-i="' + i + '">' + o.columns.map((c) => '<td class="' + (c.cls || '') + '">' + (c.render ? c.render(x) : esc(x[c.k] === null || x[c.k] === undefined ? '-' : x[c.k])) + '</td>').join('') + '</tr>').join('')
+      tb.innerHTML = slice.length ? slice.map((x, i) => '<tr class="' + (o.onRow ? 'click ' : '') + (o.rowClass ? o.rowClass(x) : '') + '" data-i="' + i + '">' + o.columns.map((c) => '<td class="' + (c.cls || '') + (c.m ? ' m-' + c.m : '') + '" data-l="' + esc(c.label || '') + '"><div class="tdv">' + (c.render ? c.render(x) : esc(x[c.k] === null || x[c.k] === undefined ? '-' : x[c.k])) + '</div></td>').join('') + '</tr>').join('')
         : '<tr><td colspan="' + o.columns.length + '">' + NX.empty(o.empty && o.empty.icon || 'search', o.empty && o.empty.title || 'Tidak ada data', o.empty && o.empty.text || (rows.length ? 'Ubah kata kunci atau saringan.' : '')) + '</td></tr>';
       tb._rows = slice;
       if (cnt) cnt.textContent = rows.length ? n + ' dari ' + rows.length : '';
@@ -403,7 +425,7 @@
   /** Cincin skor. */
   chart.ring = function (val, max, size, color, label) {
     size = size || 160; const th = 14, r = (size - th) / 2, C = 2 * Math.PI * r, frac = Math.max(0, Math.min(1, (val || 0) / (max || 100)));
-    return '<div class="ring" style="width:' + size + 'px;height:' + size + 'px"><svg width="' + size + '" height="' + size + '"><circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="var(--p-50)" stroke-width="' + th + '"/><circle class="arc" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="' + (color || 'var(--p)') + '" stroke-width="' + th + '" stroke-linecap="round" stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '" data-off="' + (C * (1 - frac)) + '"/></svg><div class="val"><div class="num b8" style="font-size:' + Math.round(size / 3.6) + 'px;line-height:1"><span data-count="' + (val || 0) + '" data-dec="' + (val % 1 ? 2 : 0) + '">0</span></div><div class="xs muted">' + esc(label || '/ ' + max) + '</div></div></div>';
+    return '<div class="ring" style="width:' + size + 'px;height:' + size + 'px"><svg width="' + size + '" height="' + size + '"><circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="var(--p-50)" stroke-width="' + th + '"/><circle class="arc" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="' + (color || 'var(--p)') + '" stroke-width="' + th + '" stroke-linecap="round" stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '" data-off="' + (C * (1 - frac)) + '"/></svg><div class="val"><div class="num b8" style="font-size:' + Math.round(size / ((val || 0) % 1 ? 4.6 : 3.6)) + 'px;line-height:1"><span data-count="' + (val || 0) + '" data-dec="' + (val % 1 ? 2 : 0) + '">0</span></div><div class="xs muted">' + esc(label || '/ ' + max) + '</div></div></div>';
   };
 
   // ------------------------------------------------------------ HTML soal (sanitasi di peramban)

@@ -7,7 +7,7 @@
 (function () {
   const NX = window.NX = window.NX || {};
   const CFG = window.APP_CONFIG || {};
-  NX.VERSION = '1.0.0';
+  NX.VERSION = '1.1.0';
 
   // ------------------------------------------------------------ penyimpanan
   const LS = NX.LS = {

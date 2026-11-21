@@ -70,7 +70,7 @@
               '<section class="card card-p"><div class="flex jb ic"><h3>' + ic('chart', 'ink-p') + ' Sebaran Nilai</h3><span class="xs muted clamp1" style="max-width:55%">' + esc(d.sebaran ? d.sebaran.judul : '') + '</span></div><div class="mt12">' + (d.sebaran ? NX.chart.bars({ labels: ['0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90-100'], values: d.sebaran.bins, colors: d.sebaran.bins.map((_, i) => (i * 10 >= +(c.kkm || 75) - 9 ? 'var(--p)' : '#CBD5E1')), h: 220, unit: ' siswa' }) : NX.empty('chart', 'Belum ada data', '')) + '</div></section>' +
             '</div>' +
             '<section class="card"><div class="card-hd"><h3>' + ic('calendar', 'ink-p') + ' Jadwal Ujian Terdekat</h3><a href="#/a/ujian" class="small b6">Kelola jadwal</a></div><div class="card-bd" style="padding-top:4px">' +
-              (d.mendatang.length ? d.mendatang.map((u) => { const on = u.status_jadwal === 'BERLANGSUNG'; return '<div class="row-item"><div class="date-tile ' + (on ? 'on' : '') + '"><b>' + F.hari(u.buka) + '</b><span>' + F.bln(u.buka) + '</span></div><div class="f1" style="min-width:0"><div class="b6 clamp1">' + esc(u.judul) + '</div><div class="xs muted">' + esc(u.mapel) + ' · ' + F.jam(u.buka) + '–' + F.jam(u.tutup) + ' WIB · ' + esc(u.kelas.join(', ')) + '</div></div>' + (on ? NX.pill('Berlangsung', 'ok', 'live') : NX.pill('Terjadwal', 'p')) + '<button class="btn btn-s btn-sm" onclick="NX.go(\'' + (on ? 'a/monitor/' : 'a/ujian/edit/') + u.id_ujian + '\')">' + (on ? 'Pantau' : 'Ubah') + '</button></div>'; }).join('') : NX.empty('calendar', 'Belum ada jadwal', 'Buat ujian baru untuk mulai.', '<button class="btn btn-p mt12" onclick="NX.go(\'a/ujian/baru\')">' + ic('plus', 'sm') + 'Buat Ujian</button>')) +
+              (d.mendatang.length ? d.mendatang.map((u) => { const on = u.status_jadwal === 'BERLANGSUNG'; return '<div class="row-item row-sched"><div class="date-tile ' + (on ? 'on' : '') + '"><b>' + F.hari(u.buka) + '</b><span>' + F.bln(u.buka) + '</span></div><div class="f1" style="min-width:0"><div class="b6 clamp1">' + esc(u.judul) + '</div><div class="xs muted">' + esc(u.mapel) + ' · ' + F.jam(u.buka) + '–' + F.jam(u.tutup) + ' WIB · ' + esc(u.kelas.join(', ')) + '</div></div>' + (on ? NX.pill('Berlangsung', 'ok', 'live') : NX.pill('Terjadwal', 'p')) + '<button class="btn btn-s btn-sm" onclick="NX.go(\'' + (on ? 'a/monitor/' : 'a/ujian/edit/') + u.id_ujian + '\')">' + (on ? 'Pantau' : 'Ubah') + '</button></div>'; }).join('') : NX.empty('calendar', 'Belum ada jadwal', 'Buat ujian baru untuk mulai.', '<button class="btn btn-p mt12" onclick="NX.go(\'a/ujian/baru\')">' + ic('plus', 'sm') + 'Buat Ujian</button>')) +
             '</div></section>' +
           '</div>' +
           '<aside class="col g20">' +
@@ -110,14 +110,16 @@
       const u = d.ujian, r = d.ringkas;
       AD._mon = d;
       return '<div class="page-hd"><div><div class="crumb"><a href="#/a/monitor">Monitoring</a> ' + ic('chevR', 'sm') + ' ' + esc(u.judul) + '</div><h1 class="flex ic g12 wrap">' + esc(u.judul) + ' ' + AD.statusUjian(u) + '</h1><p>' + esc(u.mapel) + ' · ' + F.tglPanjang(u.buka) + ' · ' + F.jam(u.buka) + '–' + F.jam(u.tutup) + ' WIB · durasi ' + u.durasi + ' menit · batas ' + d.limit + ' pelanggaran</p></div>' +
-        '<div class="flex g8 wrap"><button class="btn btn-s" id="mnAll">' + ic('clock', 'sm') + 'Tambah Waktu Semua</button><button class="btn btn-s" onclick="NX.go(\'a/hasil/' + u.id_ujian + '\')">' + ic('chart', 'sm') + 'Hasil</button><button class="btn btn-p" id="mnRef">' + ic('refresh', 'sm') + 'Segarkan</button></div></div>' +
+        '<div class="flex g8 wrap"><button class="btn btn-s" onclick="NX.go(\'a/hasil/' + u.id_ujian + '\')">' + ic('chart', 'sm') + 'Hasil</button><button class="btn btn-p" id="mnRef">' + ic('refresh', 'sm') + 'Segarkan</button></div></div>' +
         '<div class="grid gc3 stagger">' +
           '<section class="card card-p"><div class="flex jb ic"><span class="small b6 muted up">Token Ujian</span>' + (u.pakai_token ? NX.pill('Wajib', 'p') : NX.pill('Tidak dipakai', '')) + '</div><div class="flex ic jb mt12 g8"><span class="num b8" style="font-size:34px;letter-spacing:.18em;color:var(--p-d)">' + esc(u.token) + '</span><div class="flex g6"><button class="icon-btn sm" data-tip="Salin" onclick="NX.copy(\'' + esc(u.token) + '\')">' + ic('copy', 'sm') + '</button><button class="icon-btn sm" data-tip="Buat token baru" id="tkNew">' + ic('refresh', 'sm') + '</button></div></div><p class="xs muted mt8">Umumkan token kepada peserta di ruang ujian.</p></section>' +
-          '<section class="card card-p"><div class="flex jb ic"><span class="small b6 muted up">PIN Pengawas</span>' + NX.pill('Buka kunci di perangkat siswa', 'pu', 'nodot') + '</div><div class="flex ic jb mt12 g8"><span class="num b8" id="pinV" style="font-size:34px;letter-spacing:.18em;color:var(--pu-s)">••••••</span><div class="flex g6"><button class="icon-btn sm" data-tip="Tampilkan" id="pinShow">' + ic('eye', 'sm') + '</button><button class="icon-btn sm" data-tip="PIN baru" id="pinNew">' + ic('refresh', 'sm') + '</button></div></div><p class="xs muted mt8">Hanya untuk pengawas — jangan diumumkan ke siswa.</p></section>' +
           '<section class="card card-p"><div class="flex jb ic"><span class="small b6 muted up">Sisa Jendela Ujian</span><span class="pill pill-ok live">Langsung</span></div><div class="num b8 mt12" style="font-size:34px" data-cd="' + u.tutup + '">' + F.hms(u.tutup - NX.now()) + '</div><p class="xs muted mt8">Diperbarui ' + F.jam(d.serverNow) + ' · otomatis tiap 15 dtk</p></section>' +
+          '<section class="card card-p"><div class="flex jb ic"><span class="small b6 muted up">Aksi Cepat</span>' + NX.pill('Semua peserta', 'pu', 'nodot') + '</div><div class="col g8 mt12">' +
+            '<button class="btn ' + (r.terkunci ? 'btn-p' : 'btn-s') + ' btn-sm btn-block" id="mnUnlockAll" ' + (r.terkunci ? '' : 'disabled') + '>' + ic('unlock', 'sm') + 'Buka Semua yang Terkunci' + (r.terkunci ? ' (' + r.terkunci + ')' : '') + '</button>' +
+            '<div class="grid gc2" style="gap:8px"><button class="btn btn-s btn-sm" id="mnAll">' + ic('clock', 'sm') + 'Tambah Waktu</button><button class="btn btn-do btn-sm" id="mnFinishAll" ' + (r.mengerjakan + r.terkunci + r.terputus ? '' : 'disabled') + '>' + ic('send', 'sm') + 'Selesaikan</button></div></div></section>' +
         '</div>' +
         '<div class="grid gc6 keep2 mt20" style="gap:12px">' + [['Total', r.total, 'users', ''], ['Belum mulai', r.belum, 'clock', 'neu'], ['Mengerjakan', r.mengerjakan, 'activity', ''], ['Terputus', r.terputus, 'wifiOff', 'warn'], ['Terkunci', r.terkunci, 'lock', 'err'], ['Selesai', r.selesai, 'checkCircle', 'ok']].map((x) => '<div class="card card-ps flex ic g12"><span class="tile sm ' + x[3] + '">' + ic(x[2], 'sm') + '</span><div><div class="num b8" style="font-size:22px">' + x[1] + '</div><div class="xs muted">' + x[0] + '</div></div></div>').join('') + '</div>' +
-        (r.terkunci ? '<div class="banner err mt20">' + ic('lock') + '<div><b>' + r.terkunci + ' peserta terkunci</b> karena mencapai batas pelanggaran. Periksa log lalu buka kunci bila perlu (dengan kompensasi waktu).</div></div>' : '') +
+        (r.terkunci ? '<div class="banner err mt20 wrap">' + ic('lock') + '<div class="f1"><b>' + r.terkunci + ' peserta terkunci</b> karena mencapai batas pelanggaran. Periksa log, lalu tekan <b>Buka kunci</b> pada baris siswa (bisa dengan kompensasi waktu).</div><button class="btn btn-p btn-sm" data-unlockall>' + ic('unlock', 'sm') + 'Buka semua</button></div>' : '') +
         '<section class="card mt20"><div id="mnTbl"></div></section>';
     },
     mount(p, root) {
@@ -136,37 +138,66 @@
           { k: 'dijawab', label: 'Progres', render: (x) => x.total ? '<div style="min-width:120px"><div class="flex jb xs"><span>' + x.dijawab + '/' + x.total + '</span><span class="muted">' + Math.round(x.dijawab / x.total * 100) + '%</span></div><div class="meter ' + (x.status === 'SELESAI' ? 'ok' : '') + ' mt4"><i data-w="' + Math.round(x.dijawab / x.total * 100) + '%" style="width:0"></i></div></div>' : '<span class="muted">—</span>' },
           { k: 'pelanggaran', label: 'Pelanggaran', desc: true, render: (x) => '<span class="pill ' + (x.pelanggaran >= d.limit ? 'pill-err' : x.pelanggaran ? 'pill-warn' : 'pill-ok') + ' nodot">' + x.pelanggaran + ' / ' + d.limit + '</span>' },
           { k: 'batas', label: 'Sisa waktu', render: (x) => x.status === 'MENGERJAKAN' || x.status === 'TERKUNCI' ? '<span class="num b6" data-cd="' + x.batas + '">' + F.hms(x.batas - NX.now()) + '</span>' + (x.extra ? ' <span class="xs ink-p">+' + x.extra + 'm</span>' : '') : x.status === 'SELESAI' ? '<span class="xs muted">Selesai ' + F.jam(x.selesai) + '</span>' : '<span class="muted">—</span>' },
-          { k: 'sinkron', label: 'Sinkron', desc: true, render: (x) => x.sinkron ? '<span class="xs ' + (x.tampil === 'TERPUTUS' ? 'ink-warn b6' : 'muted') + '">' + F.lalu(x.sinkron) + '</span>' : '<span class="muted">—</span>' },
+          { k: 'sinkron', label: 'Sinkron', m: 'hide', desc: true, render: (x) => x.sinkron ? '<span class="xs ' + (x.tampil === 'TERPUTUS' ? 'ink-warn b6' : 'muted') + '">' + F.lalu(x.sinkron) + '</span>' : '<span class="muted">—</span>' },
           { k: 'nilai', label: 'Nilai', cls: 'n', render: (x) => x.nilai !== null && x.status === 'SELESAI' ? '<b class="num">' + F.num(x.nilai) + '</b>' + (x.status_nilai === 'MENUNGGU_KOREKSI' ? ' <span class="xs ink-pu">esai</span>' : '') : '<span class="muted">—</span>' },
-          { label: '', sort: false, w: '56px', render: (x) => '<button class="icon-btn sm" data-act="' + esc(x.id_sesi) + '" aria-label="Tindakan">' + ic('more', 'sm') + '</button>' }
+          { label: 'Aksi', sort: false, cls: 'act', render: (x) => '<div class="flex g6 je nowrap">' + (x.status === 'TERKUNCI' ? '<button class="btn btn-p btn-xs" data-unlock="' + esc(x.id_sesi) + '">' + ic('unlock', 'sm') + 'Buka kunci</button>' : '') + (x.status === 'MENGERJAKAN' || x.status === 'TERKUNCI' ? '<button class="btn btn-s btn-xs" data-finish="' + esc(x.id_sesi) + '">' + ic('send', 'sm') + 'Selesaikan</button>' : '') + '<button class="icon-btn sm" data-act="' + esc(x.id_sesi) + '" aria-label="Tindakan lain">' + ic('more', 'sm') + '</button></div>' }
         ]
       });
       root.querySelector('#mnTbl').addEventListener('click', (e) => {
-        const b = e.target.closest('[data-act]'); if (!b) return;
+        const b = e.target.closest('[data-act],[data-unlock],[data-finish]'); if (!b) return;
         e.stopPropagation();
-        const x = d.peserta.find((y) => y.id_sesi === b.dataset.act);
-        AD.menuPeserta(b, x, u);
+        const id = b.dataset.act || b.dataset.unlock || b.dataset.finish;
+        const x = d.peserta.find((y) => y.id_sesi === id);
+        if (b.dataset.unlock) AD.bukaKunci(x, u);
+        else if (b.dataset.finish) AD.selesaikan(x, u);
+        else AD.menuPeserta(b, x, u);
       });
       const refresh = (fresh) => { NX.drop('a_mon_' + p.id); return NX.api('monitor.peserta', { id_ujian: p.id, _fresh: !!fresh }).then((r) => { S.cache['a_mon_' + p.id] = { t: Date.now(), d: r }; NX.rerender(); }).catch(NX.fail); };
       AD.monRefresh = refresh;
       root.querySelector('#mnRef').onclick = (e) => { NX.btnBusy(e.currentTarget, true); refresh(true); };
       root.querySelector('#mnAll').onclick = () => AD.tambahWaktu(null, u);
-      root.querySelector('#tkNew').onclick = () => AD.tokenBaru(u, 'token');
-      root.querySelector('#pinNew').onclick = () => AD.tokenBaru(u, 'pin');
-      root.querySelector('#pinShow').onclick = () => { const v = root.querySelector('#pinV'); v.textContent = v.textContent.indexOf('•') > -1 ? (u.pin_pengawas || '-') : '••••••'; };
+      root.querySelector('#tkNew').onclick = () => AD.tokenBaru(u);
+      root.querySelector('#mnUnlockAll').onclick = () => AD.bukaKunci(null, u, d.ringkas.terkunci);
+      root.querySelectorAll('[data-unlockall]').forEach((b) => { b.onclick = () => AD.bukaKunci(null, u, d.ringkas.terkunci); });
+      root.querySelector('#mnFinishAll').onclick = () => AD.selesaikanSemua(u, d.ringkas);
       clearInterval(AD._cd);
       const path = S.cur.path;
       AD._cd = setInterval(() => { if (!S.cur || S.cur.path !== path) { clearInterval(AD._cd); return; } root.querySelectorAll('[data-cd]').forEach((el) => { el.textContent = F.hms(+el.dataset.cd - NX.now()); }); }, 1000);
       AD.poll('mon', root, () => refresh(false), 15000, 60000);
     }
   });
-  AD.tokenBaru = async function (u, jenis) {
-    const y = await NX.confirm(jenis === 'pin' ? 'Buat PIN pengawas baru? PIN lama tidak berlaku lagi.' : 'Buat token baru? Peserta yang belum masuk harus memakai token baru. Peserta yang sedang mengerjakan tidak terpengaruh.', { title: jenis === 'pin' ? 'PIN baru' : 'Token baru', yes: 'Buat baru' });
+  AD.tokenBaru = async function (u) {
+    const y = await NX.confirm('Buat token baru? Peserta yang belum masuk harus memakai token baru. Peserta yang sedang mengerjakan tidak terpengaruh.', { title: 'Token baru', yes: 'Buat baru' });
     if (!y) return;
-    try { await NX.api('ujian.token', { id_ujian: u.id_ujian, jenis }); AD.ok(jenis === 'pin' ? 'PIN baru dibuat.' : 'Token baru dibuat.', ['a_mon_' + u.id_ujian, 'a_ujian']); } catch (e) { NX.fail(e); }
+    try { await NX.api('ujian.token', { id_ujian: u.id_ujian }); AD.ok('Token baru dibuat.', ['a_mon_' + u.id_ujian, 'a_ujian']); } catch (e) { NX.fail(e); }
+  };
+  /** Admin menyelesaikan (mengumpulkan) ujian satu siswa. */
+  AD.selesaikan = function (x, u) {
+    NX.confirm('Selesaikan ujian <b>' + esc(x.nama) + '</b> sekarang? Jawaban dikumpulkan dan langsung dinilai.<br><span class="small muted">Jawaban terakhir di perangkat siswa yang belum tersinkron tetap diterima saat perangkatnya tersambung (maks. 3 menit).</span>', { title: 'Selesaikan ujian siswa', yes: 'Selesaikan', danger: true })
+      .then((y) => y && AD.aksi({ aksi: 'FORCE', id_sesi: x.id_sesi }, 'Ujian ' + x.nama + ' diselesaikan.', u.id_ujian));
+  };
+  /** Admin menyelesaikan seluruh peserta yang masih mengerjakan/terkunci. */
+  AD.selesaikanSemua = function (u, r) {
+    const n = r.mengerjakan + r.terkunci + r.terputus;
+    const m = NX.modal({ title: 'Selesaikan Semua Peserta', icon: 'send', iconCls: 'err', size: 'narrow',
+      body: '<p class="tx2">Ujian <b>' + n + ' peserta</b> yang masih mengerjakan atau terkunci akan dikumpulkan sekarang dan langsung dinilai.</p>' +
+        '<div class="grid gc3 keep3 mt16" style="gap:8px">' + [['Mengerjakan', r.mengerjakan + r.terputus, 'ink-p'], ['Terkunci', r.terkunci, 'ink-err'], ['Belum mulai', r.belum, '']].map((k) => '<div class="card card-ps tc" style="box-shadow:none"><div class="num b8 ' + k[2] + '" style="font-size:20px">' + k[1] + '</div><div class="xs muted">' + k[0] + '</div></div>').join('') + '</div>' +
+        '<label class="check mt16"><input type="checkbox" id="fsTutup" checked><span>Tutup ujian sekarang — siswa yang belum mulai tidak bisa masuk lagi</span></label>' +
+        '<div class="banner neu mt12">' + ic('info', 'sm') + '<div class="small">Jawaban terakhir di perangkat siswa yang belum tersinkron tetap diterima saat perangkatnya tersambung (maks. 3 menit).</div></div>',
+      foot: '<button class="btn btn-s" data-x>Batal</button><button class="btn btn-d" id="fsOk">' + ic('send', 'sm') + 'Selesaikan Semua</button>' });
+    m.$('#fsOk').onclick = async (e) => {
+      NX.btnBusy(e.currentTarget, true);
+      try {
+        const res = await NX.api('monitor.aksi', { aksi: 'FORCE_ALL', id_ujian: u.id_ujian, tutup: m.$('#fsTutup').checked }, { timeout: 120000 });
+        m.close(true);
+        NX.toast(res.diproses + ' peserta diselesaikan' + (res.ditutup ? ' · ujian ditutup' : '') + '.', 'ok');
+        NX.drop('a_ujian'); NX.drop('a_dash');
+        if (AD.monRefresh) AD.monRefresh(true);
+      } catch (er) { NX.fail(er); NX.btnBusy(e.currentTarget, false); }
+    };
   };
   AD.aksi = async function (data, msg, ujianId) {
-    try { await NX.api('monitor.aksi', data); NX.toast(msg, 'ok'); if (AD.monRefresh) AD.monRefresh(true); else AD.ok('', ['a_mon_' + ujianId]); } catch (e) { NX.fail(e); }
+    try { await NX.api('monitor.aksi', data); NX.toast(msg, 'ok'); if (AD.monRefresh) AD.monRefresh(true); else AD.ok('', ['a_mon_' + ujianId]); } catch (e) { NX.fail(e); if (AD.monRefresh) AD.monRefresh(true); }
   };
   AD.menuPeserta = function (btn, x, u) {
     const it = [];
@@ -174,17 +205,17 @@
     if (x.status === 'TERKUNCI') it.push({ icon: 'unlock', label: 'Buka kunci…', run: () => AD.bukaKunci(x, u) });
     if (x.status !== 'SELESAI') it.push({ icon: 'clock', label: 'Tambah waktu…', run: () => AD.tambahWaktu(x, u) });
     it.push({ icon: 'monitor', label: 'Reset login (ganti perangkat)', run: () => NX.confirm('Lepaskan ikatan perangkat <b>' + esc(x.nama) + '</b>? Siswa harus masuk ulang dan memasukkan token; jawaban tetap aman.', { title: 'Reset login', yes: 'Reset login' }).then((y) => y && AD.aksi({ aksi: 'RESET_LOGIN', id_sesi: x.id_sesi }, 'Login direset.', u.id_ujian)) });
-    if (x.status === 'MENGERJAKAN' || x.status === 'TERKUNCI') it.push({ icon: 'send', label: 'Paksa kumpulkan', run: () => NX.confirm('Kumpulkan jawaban <b>' + esc(x.nama) + '</b> sekarang dan hitung nilainya?', { title: 'Paksa kumpulkan', yes: 'Kumpulkan', danger: true }).then((y) => y && AD.aksi({ aksi: 'FORCE', id_sesi: x.id_sesi }, 'Jawaban dikumpulkan.', u.id_ujian)) });
+    if (x.status === 'MENGERJAKAN' || x.status === 'TERKUNCI') it.push({ icon: 'send', label: 'Selesaikan ujian siswa ini', run: () => AD.selesaikan(x, u) });
     if (x.status !== 'BELUM') { it.push({ sep: 1 }); it.push({ icon: 'refresh', label: 'Reset peserta (mulai ulang)', danger: true, run: () => NX.confirm('Semua jawaban, nilai, dan log <b>' + esc(x.nama) + '</b> untuk ujian ini akan <b>dihapus</b> dan siswa mengulang dari awal. Lanjutkan?', { title: 'Reset peserta', yes: 'Reset', danger: true }).then((y) => y && AD.aksi({ aksi: 'RESET', id_sesi: x.id_sesi }, 'Peserta direset.', u.id_ujian)) }); }
     NX.menu(btn, it);
   };
-  AD.bukaKunci = function (x, u) {
-    const m = NX.modal({ title: 'Buka Kunci Ujian', icon: 'unlock', size: 'narrow',
-      body: '<p class="tx2">Buka kunci untuk <b>' + esc(x.nama) + '</b> (' + esc(x.kelas) + '). Pelanggaran saat ini: <b>' + x.pelanggaran + '</b>.</p><div class="field mt16"><span class="label">Kompensasi waktu</span><div class="seg" id="bkM">' + [0, 5, 10, 15].map((v, i) => '<button type="button" data-v="' + v + '" class="' + (i === 0 ? 'on' : '') + '">' + (v ? '+' + v + ' mnt' : 'Tanpa') + '</button>').join('') + '</div><span class="help">Ganti waktu yang hilang selama terkunci.</span></div>' +
+  AD.bukaKunci = function (x, u, jumlah) {
+    const m = NX.modal({ title: x ? 'Buka Kunci Ujian' : 'Buka Semua yang Terkunci', icon: 'unlock', size: 'narrow',
+      body: '<p class="tx2">' + (x ? 'Buka kunci untuk <b>' + esc(x.nama) + '</b> (' + esc(x.kelas) + '). Pelanggaran saat ini: <b>' + x.pelanggaran + '</b>.' : 'Buka kunci <b>' + (jumlah || 0) + ' peserta</b> yang terkunci sekaligus.') + '</p><p class="small muted mt4">Layar siswa terbuka sendiri dalam ±10 detik.</p><div class="field mt16"><span class="label">Kompensasi waktu</span><div class="seg" id="bkM">' + [0, 5, 10, 15].map((v, i) => '<button type="button" data-v="' + v + '" class="' + (i === 0 ? 'on' : '') + '">' + (v ? '+' + v + ' mnt' : 'Tanpa') + '</button>').join('') + '</div><span class="help">Ganti waktu yang hilang selama terkunci.</span></div>' +
         '<label class="check mt16"><input type="checkbox" id="bkR" checked><span>Reset hitungan pelanggaran ke 0</span></label>',
       foot: '<button class="btn btn-s" data-x>Batal</button><button class="btn btn-p" id="bkOk">' + ic('unlock', 'sm') + 'Buka Kunci</button>' });
     m.$('#bkM').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; m.$$('#bkM button').forEach((z) => z.classList.toggle('on', z === b)); };
-    m.$('#bkOk').onclick = () => { const menit = +m.$('#bkM .on').dataset.v; const resetViol = m.$('#bkR').checked; m.close(true); AD.aksi({ aksi: 'UNLOCK', id_sesi: x.id_sesi, menit, resetViol }, 'Kunci dibuka.', u.id_ujian); };
+    m.$('#bkOk').onclick = () => { const menit = +m.$('#bkM .on').dataset.v; const resetViol = m.$('#bkR').checked; m.close(true); AD.aksi(x ? { aksi: 'UNLOCK', id_sesi: x.id_sesi, menit, resetViol } : { aksi: 'UNLOCK_ALL', id_ujian: u.id_ujian, menit, resetViol }, x ? 'Kunci ' + x.nama + ' dibuka.' : 'Semua kunci dibuka.', u.id_ujian); };
   };
   AD.tambahWaktu = function (x, u) {
     const m = NX.modal({ title: x ? 'Tambah Waktu — ' + x.nama : 'Tambah Waktu Semua Peserta', icon: 'clock', size: 'narrow',
@@ -197,7 +228,7 @@
     const m = NX.drawer({ title: x.nama, icon: 'history', body: NX.skel(300) });
     try {
       const r = await NX.api('monitor.log', { id_sesi: x.id_sesi });
-      const lbl = Object.assign({}, EX.VLABEL, { KUMPUL_OTOMATIS: 'Dikumpulkan otomatis (batas pelanggaran)', TERKUNCI: 'Ujian terkunci', DIBUKA: 'Kunci dibuka', RESET_LOGIN: 'Reset login', TAMBAH_WAKTU: 'Tambah waktu', PAKSA_KUMPUL: 'Paksa kumpul', RESET: 'Peserta direset' });
+      const lbl = Object.assign({}, EX.VLABEL, { KUMPUL_OTOMATIS: 'Dikumpulkan otomatis (batas pelanggaran)', TERKUNCI: 'Ujian terkunci', DIBUKA: 'Kunci dibuka', RESET_LOGIN: 'Reset login', TAMBAH_WAKTU: 'Tambah waktu', PAKSA_KUMPUL: 'Diselesaikan admin', RESET: 'Peserta direset' });
       m.$('.modal-bd').innerHTML = '<div class="grid gc3" style="gap:10px">' + [['Status', MS[x.tampil][0]], ['Pelanggaran', r.pelanggaran + ' / ' + (AD._mon ? AD._mon.limit : '-')], ['Progres', x.dijawab + '/' + x.total]].map((k) => '<div class="card card-ps"><div class="xs muted">' + k[0] + '</div><div class="b7">' + esc(k[1]) + '</div></div>').join('') + '</div>' +
         '<h4 class="mt20">Linimasa kejadian</h4><div class="mt8">' + (r.log.length ? r.log.map((e) => { const isV = EX.VLABEL[e.j] !== undefined; return '<div class="row-item" style="align-items:flex-start"><span class="tile sm ' + (e.h ? 'err' : isV ? 'warn' : 'neu') + '">' + ic(e.h ? 'alert' : isV ? 'info' : 'check', 'sm') + '</span><div class="f1"><div class="small b6">' + esc(lbl[e.j] || e.j) + (e.h ? ' ' + NX.pill('dihitung', 'err', 'nodot') : '') + '</div><div class="xs tx2">' + esc(e.k || '') + '</div><div class="xs muted">' + F.tglJam(e.t) + '</div></div></div>'; }).join('') : NX.empty('shieldCheck', 'Tidak ada kejadian', 'Peserta ini belum memiliki catatan.')) + '</div>';
     } catch (e) { m.$('.modal-bd').innerHTML = NX.errorBox(e); }
@@ -296,7 +327,7 @@
           AD.sw('tampilkan_nilai', u.tampilkan_nilai, 'Tampilkan nilai ke siswa', 'Nilai muncul setelah siswa mengumpulkan.') +
         '</div></section>' +
         '<section class="card card-p"><h3>Ringkasan</h3><div class="mt12" id="ufRing"></div></section>' +
-        (p.id && u.status === 'TERBIT' ? '<section class="card card-p"><div class="flex jb ic"><span class="small b6 muted up">Token</span><span class="num b8" style="font-size:22px;letter-spacing:.14em">' + esc(u.token) + '</span></div><div class="flex jb ic mt8"><span class="small b6 muted up">PIN pengawas</span><span class="num b8" style="font-size:18px;letter-spacing:.14em;color:var(--pu-s)">' + esc(u.pin_pengawas) + '</span></div></section>' : '') +
+        (p.id && u.status === 'TERBIT' ? '<section class="card card-p"><div class="flex jb ic"><span class="small b6 muted up">Token</span><span class="num b8" style="font-size:22px;letter-spacing:.14em">' + esc(u.token) + '</span></div><p class="xs muted mt8">Buka kunci & selesaikan siswa dari menu Monitoring Langsung.</p></section>' : '') +
       '</aside></div></div>';
   }
   function mountUjian(p, page) {

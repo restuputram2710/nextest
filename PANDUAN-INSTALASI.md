@@ -63,7 +63,7 @@ Di dalam ZIP frontend sudah ada **template impor**: `templates/template-soal-cbt
 
 `setupAplikasi` aman dijalankan ulang: tidak menimpa data, kata sandi, atau kunci rahasia yang sudah ada.
 
-> **Ingin mencoba dulu dengan data contoh?** Jalankan fungsi **`buatDataContoh`**. Ia membuat 2 kelas, 10 siswa (NIS `2026001`–`2026010`, NISN `0062841920`–…), 6 soal semua tipe, dan 1 ujian yang sedang berlangsung. Token ujian & PIN pengawas tercetak di log. Hapus/nonaktifkan data contoh sebelum dipakai sungguhan.
+> **Ingin mencoba dulu dengan data contoh?** Jalankan fungsi **`buatDataContoh`**. Ia membuat 2 kelas, 10 siswa (NIS `2026001`–`2026010`, NISN `0062841920`–…), 6 soal semua tipe, dan 1 ujian yang sedang berlangsung. Token ujian tercetak di log. Hapus/nonaktifkan data contoh sebelum dipakai sungguhan.
 
 ### A5. Rahasia & ID — semuanya otomatis di Script Properties
 Anda **tidak perlu mengetik apa pun**. Buka ⚙️ **Setelan proyek → Properti skrip** untuk melihat:
@@ -194,14 +194,16 @@ Lalu di peramban tekan **Ctrl+Shift+R**.
 
 ### C4. Jadwal ujian
 **Jadwal Ujian → Buat Ujian** → judul, jenis, mapel, kelas, waktu buka/tutup, durasi, KKM ujian (opsional) → pilih soal dari berkas (atur bobot) atau **acak N soal per siswa** → keamanan: wajib token, batas pelanggaran, tindakan saat batas, acak soal, acak pilihan, tampilkan nilai → **Terbitkan**.
-Saat terbit, server menyiapkan 1 baris per siswa (kunci kecepatan untuk 400 siswa). **Token** (untuk siswa) dan **PIN pengawas** (untuk membuka kunci di perangkat siswa) tampil di halaman ujian & Monitoring. Setelah ada siswa mulai, daftar soal terkunci.
+Saat terbit, server menyiapkan 1 baris per siswa (kunci kecepatan untuk 400 siswa). **Token** (untuk siswa) tampil di halaman ujian & Monitoring. Tidak ada PIN/kode pengawas — semua tindakan pengawas dilakukan admin dari menu **Monitoring Langsung**. Setelah ada siswa mulai, daftar soal terkunci.
 
 ### C5. Hari ujian
 - [ ] Ujian sudah **Terbit** minimal H-1.
 - [ ] Laptop/PC: Chrome/Edge terbaru. HP Android: aktifkan **Sematkan aplikasi / Pin layar**, matikan notifikasi.
 - [ ] Token **dibacakan saat ujian dimulai**.
 - [ ] Minimal satu admin membuka **Monitoring Langsung** (diperbarui otomatis tiap 15 detik).
-- [ ] Siswa terkunci → **Buka kunci** (+ kompensasi waktu 0/5/10/15 menit, reset hitungan) dari Monitoring, **atau** pengawas mengetik **PIN** langsung di layar siswa.
+- [ ] Siswa terkunci → admin buka **Monitoring Langsung → pilih ujian** → tombol **Buka kunci** di baris siswa (+ kompensasi waktu 0/5/10/15 menit, reset hitungan). Layar siswa **terbuka sendiri ±10 detik kemudian**, tanpa kode apa pun. Banyak yang terkunci sekaligus → **Buka Semua yang Terkunci**.
+- [ ] Siswa perlu dihentikan (mis. ketahuan menyontek, waktu sesi habis) → tombol **Selesaikan** di baris siswa. Jawaban yang sudah diisi dikumpulkan dan langsung dinilai; layar siswa berpindah ke halaman hasil dengan keterangan *"diselesaikan oleh pengawas"*.
+- [ ] Mengakhiri sesi untuk semua → kartu **Aksi Cepat → Selesaikan** (Selesaikan Semua). Centang **Tutup ujian sekarang** agar siswa yang belum mulai tidak bisa masuk lagi. Jawaban terakhir yang belum sempat terkirim dari perangkat siswa tetap diterima bila tersambung dalam 3 menit.
 - [ ] Perangkat siswa rusak → **Reset login** → siswa masuk di perangkat lain, jawaban & sisa waktu tetap.
 - [ ] Setelah selesai: **Hasil Ujian** (ketuntasan klasikal, remedial, ekspor Excel) → **Koreksi Esai** → **Analisis Butir**.
 
@@ -232,7 +234,7 @@ Sesuai permintaan, siswa **tidak memakai kata sandi**. Karena NIS mudah diketahu
 | Muat ulang halaman | penanda sesi | Dicatat |
 | Login di perangkat lain | server | Dicatat |
 
-Kejadian dalam rentang 3 detik digabung jadi satu. Sanksi bertingkat: peringatan kuning → **Peringatan Terakhir** merah → batas tercapai: **terkunci** (cek status otomatis tiap 15 detik / PIN pengawas) **atau dikumpulkan otomatis** sesuai pengaturan ujian. Ada suara alarm, getar (HP), watermark, indikator luring, dan jawaban tersimpan di perangkat seketika.
+Kejadian dalam rentang 3 detik digabung jadi satu. Sanksi bertingkat: peringatan kuning → **Peringatan Terakhir** merah → batas tercapai: **terkunci** (layar menunggu dan terbuka sendiri setelah admin menekan **Buka kunci** di Monitoring — tidak ada kode yang bisa ditebak siswa) **atau dikumpulkan otomatis** sesuai pengaturan ujian. Ada suara alarm, getar (HP), watermark, indikator luring, dan jawaban tersimpan di perangkat seketika.
 
 **Batasan yang tidak bisa dihindari aplikasi web:** halaman web **tidak bisa memblokir** pembukaan tab/aplikasi lain (Alt+Tab, tombol Windows, Home di HP dikendalikan sistem operasi). NEXTEST **mendeteksi seketika, mencatat, dan menghukum**. HP kedua di bawah meja tidak terdeteksi — tetap butuh pengawas ruang. Untuk penguncian penuh: **Safe Exam Browser** (laptop) atau **Pin layar** (Android). iPhone tidak mendukung layar penuh untuk halaman web → tidak disarankan.
 
@@ -297,13 +299,44 @@ Akhir semester: **Pengaturan → Arsip Semester** memindahkan jawaban & log ujia
 - Siswa login **NIS atau NISN saja** (tanpa kata sandi) + token ujian + satu perangkat.
 - **Tanpa cetak PDF otomatis** (kartu, rapor). Laporan diunduh sebagai **Excel**.
 - **Tanpa kamera/mikrofon/AI proctoring.** Pengawasan memakai deteksi peramban + pengawas ruang.
-- Fitur CBT mengikuti web referensi: 4 tipe soal (PG, PG Kompleks, Kategori, Esai), berkas soal per jenis ujian, impor Word/Excel/Google Sheets + template, acak soal/opsi, acak N soal, token, batas pelanggaran per ujian, toleransi tombol Selesai, KKM per kelas, tambah waktu, buka kunci dengan kompensasi, reset peserta, koreksi esai (nama disembunyikan), ketuntasan klasikal, remedial, analisis butir. Ditambah dari PRD/desain: PIN pengawas, tindakan Kunci/Kumpul otomatis, KKM per ujian, analisis daya beda & reliabilitas.
+- Fitur CBT mengikuti web referensi: 4 tipe soal (PG, PG Kompleks, Kategori, Esai), berkas soal per jenis ujian, impor Word/Excel/Google Sheets + template, acak soal/opsi, acak N soal, token, batas pelanggaran per ujian, toleransi tombol Selesai, KKM per kelas, tambah waktu, buka kunci dengan kompensasi, reset peserta, koreksi esai (nama disembunyikan), ketuntasan klasikal, remedial, analisis butir. Ditambah dari PRD/desain: tindakan Kunci/Kumpul otomatis, KKM per ujian, **Selesaikan oleh admin** (per siswa & semua sekaligus, opsional tutup ujian), **Buka Semua yang Terkunci**, analisis daya beda & reliabilitas.
+- **Kunci layar hanya dibuka admin** dari Monitoring (v1.1: PIN/kode pengawas dihapus atas permintaan sekolah).
 
 ---
 
 ## 11. Hasil pengujian sebelum diserahkan
 
-- **Uji backend (simulator Apps Script): 165 pemeriksaan lulus, 0 gagal** — login NIS/NISN (nol di depan aman), token, kunci jawaban tidak pernah terkirim ke siswa, sinkron & dedupe pelanggaran, terkunci/PIN/buka kunci, kumpul otomatis, login ganda, penilaian parsial PG kompleks & kategori, koreksi esai, analisis butir, impor siswa & soal, finalisasi lewat batas waktu, pengaturan, proteksi akun admin.
+- **Uji backend (simulator Apps Script): 194 pemeriksaan lulus, 0 gagal** — login NIS/NISN (nol di depan aman), token, kunci jawaban tidak pernah terkirim ke siswa, sinkron & dedupe pelanggaran, terkunci → hanya admin yang bisa membuka (siswa ditolak), buka semua, selesaikan per siswa & semua + tutup ujian, jawaban susulan setelah diselesaikan, kumpul otomatis, login ganda, penilaian parsial PG kompleks & kategori, koreksi esai, analisis butir, impor siswa & soal, finalisasi lewat batas waktu, pengaturan, proteksi akun admin.
 - **Uji beban 400 siswa: 0 gagal, 0 antrean kunci gagal.**
-- **Uji peramban (Chrome, desktop + HP 390 px): 73 pemeriksaan lulus, 0 galat JavaScript** — alur admin lengkap, impor Word & Excel termasuk gambar, ujian siswa sampai terkunci → PIN → kumpul → hasil, login ganda ditolak, laporan & ekspor.
+- **Uji peramban (Chrome, desktop + HP 390 px): 83 pemeriksaan lulus, 0 galat JavaScript** — alur admin lengkap, impor Word & Excel termasuk gambar, ujian siswa sampai terkunci → admin **Buka kunci** → layar siswa terbuka sendiri → kumpul → hasil, admin **Selesaikan** 1 siswa (HP siswa otomatis pindah ke hasil), **Selesaikan Semua + tutup ujian**, login ganda ditolak, laporan & ekspor.
+- **Audit tampilan HP (lebar 390 px): 43 halaman & keadaan** (semua halaman siswa, 4 tipe soal, peringatan, layar terkunci, hasil, dan semua halaman admin) — **0 elemen meluap keluar layar**, 0 galat JavaScript.
 - Diuji di simulator; uji coba nyata (gladi bersih 1 kelas → 1 angkatan) tetap disarankan sebelum PAS.
+
+---
+
+## 12. Pembaruan v1.1 — cara memasang di aplikasi yang sudah berjalan
+
+**Yang berubah**
+1. **Tampilan HP dirapikan**: halaman Profil, kartu ujian, halaman konfirmasi & token, hasil ujian, semua tabel admin/siswa berubah menjadi kartu bertumpuk di HP, jendela dialog muncul dari bawah layar, tombol tidak lagi terpotong.
+2. **Layar terkunci tanpa kode pengawas** — hanya bisa dibuka admin dari **Monitoring Langsung** (tombol **Buka kunci** per siswa atau **Buka Semua yang Terkunci**). Layar siswa terbuka sendiri.
+3. **Selesaikan oleh admin** — per siswa (tombol **Selesaikan** di baris siswa) atau semua sekaligus (**Aksi Cepat → Selesaikan**, opsional tutup ujian).
+
+**Data aman:** tidak ada sheet/kolom yang berubah; ujian, soal, siswa, dan nilai tetap.
+
+**Backend (3 berkas berubah: `Kode.gs`, `Ujian.gs`, `Setup.gs`)**
+1. Buka proyek Apps Script → untuk masing-masing dari 3 berkas: hapus seluruh isinya → tempel isi baru → **Simpan**.
+2. **Terapkan → Kelola deployment → ✏️ Edit → Versi: Versi baru → Terapkan.** (Jangan "Deployment baru".)
+
+**Frontend**
+1. Ekstrak `nextest-frontend.zip` ke folder sementara.
+2. Salin semua isinya ke folder repo Anda (folder yang berisi `index.html`) dan pilih **Ganti/Replace** — **KECUALI `js/config.js`**: jangan ditimpa, karena berkas itu berisi alamat `/exec` milik Anda. (Kalau terlanjur tertimpa, isi lagi alamat `/exec` seperti langkah B1.)
+3. Di terminal, dari folder repo:
+```
+git add .
+git commit -m "NEXTEST v1.1: tampilan HP, buka kunci & selesaikan oleh admin"
+git push
+```
+4. Tunggu 1–2 menit → buka situs → **Ctrl+Shift+R** (di HP: tutup tab lalu buka lagi). Versi baru terlihat di kiri bawah panel: **v1.1.0**.
+
+> Lakukan pembaruan **di luar jam ujian**. Siswa yang sedang mengerjakan saat backend diperbarui tetap aman (jawaban tersimpan di perangkat), tetapi sebaiknya tidak dilakukan bersamaan.
+
